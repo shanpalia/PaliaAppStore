@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Admin Dashboard · PaliaAPK HUB</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body data-page="dashboard">
+
+<div class="app-shell" id="dashboardShell">
+
+  <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">PA</div>
+      <div class="brand-text">PaliaAPK HUB<small>Admin Console</small></div>
+    </div>
+
+    <nav class="nav-group">
+      <div class="nav-label">Overview</div>
+      <button class="nav-item active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </button>
+
+      <div class="nav-label">Catalog</div>
+      <button class="nav-item" data-view="apps">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>
+        Manage Apps
+        <span class="count" id="navAppsCount">0</span>
+      </button>
+      <button class="nav-item" id="btnAddAppNav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add New App
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-chip">
+        <div class="avatar" id="adminAvatar">A</div>
+        <div class="who">
+          <div class="name" id="adminName">Admin</div>
+          <div class="email" id="adminEmail">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main column -->
+  <div class="main-col">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title" id="topbarTitle">Dashboard
+        <span id="topbarSubtitle">Overview of your app catalog</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-mint" id="btnAddApp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span class="txt">Add New App</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ DASHBOARD VIEW ============ -->
+      <section class="view active" id="view-dashboard">
+
+        <div class="stats-grid">
+          <div class="stat-card mint">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M8 8h8M8 16h5"/></svg></div>
+            <div class="value" id="statTotal">0</div>
+            <div class="label">Total Apps</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="value" id="statPublished">0</div>
+            <div class="label">Published</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+            <div class="value" id="statDrafts">0</div>
+            <div class="label">Drafts</div>
+          </div>
+          <div class="stat-card mint">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="value" id="statFeatured">0</div>
+            <div class="label">Featured</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="value" id="statTrending">0</div>
+            <div class="label">Trending</div>
+          </div>
+          <div class="stat-card red">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+            <div class="value" id="statDownloads">0</div>
+            <div class="label">Total Downloads</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Recent Uploads</h2>
+              <p>The latest apps added to your catalog</p>
+            </div>
+          </div>
+          <div class="table-scroll" id="recentTableWrap" style="display:none;">
+            <table class="data-table">
+              <thead>
+                <tr><th>App</th><th>Category</th><th>Status</th><th>Downloads</th><th>Added</th><th></th></tr>
+              </thead>
+              <tbody id="recentTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="recentEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>
+            <h3>No apps yet</h3>
+            <p>Add your first app to see it appear here.</p>
+            <button class="btn btn-mint" id="btnAddAppEmpty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add New App
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MANAGE APPS VIEW ============ -->
+      <section class="view" id="view-apps">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>All Apps</h2>
+              <p>Search, edit, publish or remove listings</p>
+            </div>
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="appSearch" placeholder="Search by name, package or category">
+            </div>
+          </div>
+          <div class="table-scroll" id="appsTableWrap" style="display:none;">
+            <table class="data-table">
+              <thead>
+                <tr><th>App</th><th>Category</th><th>Status</th><th>Featured</th><th>Trending</th><th>Downloads</th><th>Added</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="appsTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="appsEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>
+            <h3>No apps found</h3>
+            <p>Try a different search, or add a new app.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ ADD / EDIT APP MODAL ============ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalTitle">Add New App</h3>
+        <p id="modalSubtitle">Fill in the details to list a new app.</p>
+      </div>
+      <button class="modal-close" id="modalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form id="appForm" novalidate>
+        <div class="form-grid">
+          <div class="f-group full">
+            <label for="f_name">App Name <span class="req">*</span></label>
+            <input type="text" id="f_name" placeholder="e.g. Palia Companion" required>
+          </div>
+
+          <div class="f-group">
+            <label for="f_package">Package Name <span class="req">*</span></label>
+            <input type="text" id="f_package" placeholder="com.example.app" required>
+          </div>
+
+          <div class="f-group">
+            <label for="f_category">Category</label>
+            <input type="text" id="f_category" placeholder="Tools, Games, Social…">
+          </div>
+
+          <div class="f-group">
+            <label for="f_version">Version</label>
+            <input type="text" id="f_version" placeholder="1.0.0">
+          </div>
+
+          <div class="f-group">
+            <label for="f_version_code">Version Code</label>
+            <input type="number" id="f_version_code" placeholder="1">
+          </div>
+
+          <div class="f-group">
+            <label for="f_size">Size (MB)</label>
+            <input type="number" step="0.1" id="f_size" placeholder="24.5">
+          </div>
+
+          <div class="f-group">
+            <label>&nbsp;</label>
+            <div class="f-hint">Downloads and rating are tracked automatically.</div>
+          </div>
+
+          <div class="f-group full">
+            <label for="f_short_desc">Short Description</label>
+            <input type="text" id="f_short_desc" placeholder="One line shown in listings and search">
+          </div>
+
+          <div class="f-group full">
+            <label for="f_description">Full Description</label>
+            <textarea id="f_description" placeholder="Describe what the app does, key features, and requirements…"></textarea>
+          </div>
+
+          <div class="f-group full">
+            <label>App Icon</label>
+            <div class="uploader">
+              <input type="file" id="iconInput" accept="image/*">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="u-title">Upload icon</div>
+              <div class="u-sub">Square PNG/JPG, 512×512 recommended</div>
+            </div>
+            <div class="preview-row" id="iconPreview"></div>
+          </div>
+
+          <div class="f-group full">
+            <label>Banner Image</label>
+            <div class="uploader">
+              <input type="file" id="bannerInput" accept="image/*">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="u-title">Upload banner</div>
+              <div class="u-sub">Wide feature image, 1200×600 recommended</div>
+            </div>
+            <div class="preview-row" id="bannerPreview"></div>
+          </div>
+
+          <div class="f-group full">
+            <label>Screenshots</label>
+            <div class="uploader">
+              <input type="file" id="screenshotsInput" accept="image/*" multiple>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="u-title">Upload screenshots</div>
+              <div class="u-sub">Select multiple images at once</div>
+            </div>
+            <div class="preview-row" id="screenshotsPreview"></div>
+          </div>
+
+          <div class="f-group full">
+            <label>APK File</label>
+            <div class="uploader">
+              <input type="file" id="apkInput" accept=".apk">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="u-title">Upload APK</div>
+              <div class="u-sub">.apk package file</div>
+            </div>
+            <div class="preview-row" id="apkPreview"></div>
+          </div>
+
+          <div class="f-group full">
+            <div class="progress-bar" id="uploadProgress"><div class="fill"></div></div>
+          </div>
+
+          <div class="f-group">
+            <div class="toggle-row">
+              <div>
+                <div class="t-label">Featured</div>
+                <div class="t-sub">Show in the featured section</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="featuredToggle">
+                <span class="track"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="f-group">
+            <div class="toggle-row">
+              <div>
+                <div class="t-label">Trending</div>
+                <div class="t-sub">Show in the trending section</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="trendingToggle">
+                <span class="track"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-foot" id="modalFoot">
+      <span class="status-hint">New apps start as a draft until you publish them.</span>
+      <button class="btn btn-ghost" id="modalCancel">Cancel</button>
+      <button class="btn btn-outline" id="btnSaveDraft">Save as Draft</button>
+      <button class="btn btn-mint" id="btnPublish">Publish</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DELETE CONFIRM DIALOG ============ -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal confirm-box">
+    <div class="warn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+    </div>
+    <h3>Delete this app?</h3>
+    <p>You're about to permanently remove <strong id="confirmAppName">this app</strong>. This can't be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-outline" id="confirmCancel">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Delete app</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- Firebase (compat SDK) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script src="admin.js"></script>
+<script>
+  // "Add New App" in the sidebar opens the same modal as the topbar button.
+  document.getElementById('btnAddAppNav')?.addEventListener('click', () => {
+    document.getElementById('btnAddApp').click();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Admin Sign In · PaliaAPK HUB</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body data-page="login">
+
+<div class="login-shell">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="mark">PA</div>
+      <div class="brand">PaliaAPK HUB</div>
+    </div>
+    <p class="login-subtitle">Admin console — sign in to manage your catalog</p>
+
+    <div class="login-error" id="loginError">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="loginErrorText">Something went wrong.</span>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <div class="input-wrap">
+          <input type="email" id="loginEmail" autocomplete="username" placeholder="admin@paliaapkhub.com" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" required>
+          <button type="button" class="toggle-pw" id="togglePw">Show</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="loginSubmit">
+        <span class="spinner" id="loginSpinner"></span>
+        <span id="loginSubmitLabel">Sign in</span>
+      </button>
+    </form>
+
+    <p class="login-footer">Restricted access — PaliaAPK HUB administrators only.</p>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- Firebase (compat SDK) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script src="admin.js"></script>
+</body>
+</html>
