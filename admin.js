@@ -45,16 +45,20 @@
       client is only a UI gate, not a database security rule.
    ========================================================================== */
 
-const FIREBASE_CONFIG = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  appId: "YOUR_FIREBASE_APP_ID"
+const firebaseConfig = {
+  apiKey: "AIzaSyCn7GUkOaFO4l0x1zM5mwW4hFkW2ISxR10",
+  authDomain: "shanpalia-apk-hub.firebaseapp.com",
+  projectId: "shanpalia-apk-hub",
+  storageBucket: "shanpalia-apk-hub.firebasestorage.app",
+  messagingSenderId: "270953807883",
+  appId: "1:270953807883:web:c900f4409938f16477870e",
+  measurementId: "G-7BMQEGPY8C"
 };
 
 const SUPABASE_CONFIG = {
-  url: "https://YOUR_PROJECT_REF.supabase.co",
-  anonKey: "YOUR_SUPABASE_ANON_KEY"
+  url: "https://ralinnuegsbuvlhwpzln.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlubnVlZ3NidXZsaHdwemxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTU2NDIsImV4cCI6MjA5NTg3MTY0Mn0.hIec6UxRx5gzSMTi5oJ3_xXw3d1QKCmKsPF-stBwIFE
+
 };
 
 // Leave empty [] to allow any authenticated Firebase user through.
