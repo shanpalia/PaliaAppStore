@@ -19,8 +19,8 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 /* ---------------------------------------------------------------------
    PLACEHOLDER CONFIGURATION — replace before deploying
    --------------------------------------------------------------------- */
-const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY";
+const SUPABASE_URL = "https://ralinnuegsbuvlhwpzln.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhbGlubnVlZ3NidXZsaHdwemxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTU2NDIsImV4cCI6MjA5NTg3MTY0Mn0.hIec6UxRx5gzSMTi5oJ3_xXw3d1QKCmKsPF-stBwIFE";
 
 /* ---------------------------------------------------------------------
    STORAGE BUCKET NAMES — placeholders, adjust to match your project
