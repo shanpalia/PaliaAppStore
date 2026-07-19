@@ -18,11 +18,9 @@
 
   const heroSlider = document.getElementById("heroSlider");
   const sliderTrack = document.getElementById("sliderTrack");
-  const slides = sliderTrack ? Array.from(sliderTrack.querySelectorAll(".slide")) : [];
   const sliderPrev = document.getElementById("sliderPrev");
   const sliderNext = document.getElementById("sliderNext");
   const sliderDotsWrap = document.getElementById("sliderDots");
-  const sliderDots = sliderDotsWrap ? Array.from(sliderDotsWrap.querySelectorAll(".dot")) : [];
 
   const categoriesList = document.getElementById("categoriesList");
 
@@ -35,6 +33,13 @@
 
   const currentYearEl = document.getElementById("currentYear");
 
+  // Data-driven grid targets — populated from Supabase, never hardcoded.
+  const featuredAppsEl = document.getElementById("featuredApps");
+  const trendingAppsEl = document.getElementById("trendingApps");
+  const newAppsEl = document.getElementById("newApps");
+  const topChartsEl = document.getElementById("topCharts");
+  const recommendedAppsEl = document.getElementById("recommendedApps");
+
   const appSections = [
     "featuredApps",
     "trendingApps",
@@ -42,6 +47,11 @@
     "topCharts",
     "recommendedApps",
   ];
+
+  // Fallback icon used whenever an app has no icon_url (or the icon fails
+  // to load). Points at the site's own logo asset, which already exists
+  // and is referenced elsewhere in index.html (header/footer).
+  const DEFAULT_APP_ICON = "assets/images/logo-placeholder.svg";
 
   /* =====================================================================
      1. HELPER FUNCTIONS
@@ -105,6 +115,31 @@
     window.scrollTo({ top, behavior: "smooth" });
   };
 
+  /** Formats a raw download count the way Play Store-style listings do. */
+  const formatDownloads = (count) => {
+    const n = Number(count) || 0;
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(n % 1_000_000_000 === 0 ? 0 : 1)}B+`;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M+`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}K+`;
+    return `${n}+`;
+  };
+
+  /** Assigns an icon URL to an <img>, falling back to the default logo
+   *  whenever the URL is empty OR the image fails to actually load. */
+  const setIconWithFallback = (imgEl, url) => {
+    const finalUrl = url && String(url).trim() ? String(url).trim() : DEFAULT_APP_ICON;
+    imgEl.src = finalUrl;
+    imgEl.addEventListener(
+      "error",
+      () => {
+        if (!imgEl.src.endsWith(DEFAULT_APP_ICON)) {
+          imgEl.src = DEFAULT_APP_ICON;
+        }
+      },
+      { once: true }
+    );
+  };
+
   /* =====================================================================
      2. LOADING OVERLAY — INITIAL PAGE LOAD
      ===================================================================== */
@@ -123,22 +158,123 @@
   /* =====================================================================
      3. HERO SLIDER
      ===================================================================== */
-  const initHeroSlider = () => {
-    if (!slides.length) return;
 
-    let currentIndex = slides.findIndex((slide) => slide.classList.contains("active"));
-    if (currentIndex < 0) currentIndex = 0;
+  /**
+   * Builds hero slides from featured apps and injects them into the
+   * existing #sliderTrack / #sliderDots containers. Apps without a
+   * banner_url are skipped entirely (per spec: missing banner = hidden
+   * slide). If nothing qualifies, the whole hero section is hidden.
+   * @param {Array} featuredApps
+   * @returns {{slides: HTMLElement[], dots: HTMLElement[]}}
+   */
+  const renderHeroSlider = (featuredApps) => {
+    if (!sliderTrack || !sliderDotsWrap) return { slides: [], dots: [] };
 
+    const slidesData = (featuredApps || []).filter(
+      (app) => app && app.banner_url && String(app.banner_url).trim()
+    );
+
+    sliderTrack.innerHTML = "";
+    sliderDotsWrap.innerHTML = "";
+
+    if (!slidesData.length) {
+      if (heroSlider) heroSlider.hidden = true;
+      return { slides: [], dots: [] };
+    }
+
+    if (heroSlider) heroSlider.hidden = false;
+
+    const slideEls = [];
+    const dotEls = [];
+
+    slidesData.forEach((app, i) => {
+      appsById.set(String(app.id), app);
+      const isActive = i === 0;
+
+      const article = document.createElement("article");
+      article.className = isActive ? "slide active" : "slide";
+      article.setAttribute("aria-hidden", String(!isActive));
+      article.dataset.appId = String(app.id);
+
+      const bannerImg = document.createElement("img");
+      bannerImg.className = "slide-banner";
+      bannerImg.loading = "lazy";
+      bannerImg.alt = `Promotional banner for ${app.name || "featured app"}`;
+      bannerImg.src = app.banner_url;
+      // If the banner itself is broken, don't leave a broken-image icon —
+      // just hide it so the slider's own background gradient shows through.
+      bannerImg.addEventListener("error", () => { bannerImg.style.display = "none"; }, { once: true });
+
+      const content = document.createElement("div");
+      content.className = "slide-content";
+
+      const iconImg = document.createElement("img");
+      iconImg.className = "slide-app-icon";
+      iconImg.width = 72;
+      iconImg.height = 72;
+      iconImg.loading = "lazy";
+      iconImg.alt = `${app.name || "App"} icon`;
+      setIconWithFallback(iconImg, app.icon_url);
+
+      const textWrap = document.createElement("div");
+      textWrap.className = "slide-text";
+
+      const title = document.createElement("h2");
+      title.className = "slide-title";
+      title.textContent = app.name || "Untitled app";
+
+      const desc = document.createElement("p");
+      desc.className = "slide-desc";
+      desc.textContent = app.description || app.developer || "";
+
+      const installBtn = document.createElement("button");
+      installBtn.type = "button";
+      installBtn.className = "btn btn-install";
+      installBtn.setAttribute("aria-label", `Install ${app.name || "app"}`);
+      installBtn.dataset.appId = String(app.id);
+      installBtn.textContent = "Install";
+
+      textWrap.append(title, desc, installBtn);
+      content.append(iconImg, textWrap);
+      article.append(bannerImg, content);
+      sliderTrack.appendChild(article);
+      slideEls.push(article);
+
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = isActive ? "dot active" : "dot";
+      dot.setAttribute("role", "tab");
+      dot.setAttribute("aria-selected", String(isActive));
+      dot.setAttribute("aria-label", `Go to slide ${i + 1}`);
+      dot.dataset.slide = String(i);
+      sliderDotsWrap.appendChild(dot);
+      dotEls.push(dot);
+    });
+
+    return { slides: slideEls, dots: dotEls };
+  };
+
+  /**
+   * Wires up navigation, autoplay, swipe and keyboard controls for a given
+   * set of slide/dot elements. Called once, after the slider has been
+   * populated with real data.
+   * @param {HTMLElement[]} slideEls
+   * @param {HTMLElement[]} dotEls
+   */
+  const initHeroSliderEngine = (slideEls, dotEls) => {
+    if (!slideEls.length) return;
+
+    let currentIndex = 0;
     let autoplayId = null;
     const AUTOPLAY_DELAY = 5000;
 
     const render = () => {
-      slides.forEach((slide, i) => {
+      slideEls.forEach((slide, i) => {
         const isActive = i === currentIndex;
         slide.classList.toggle("active", isActive);
         slide.setAttribute("aria-hidden", String(!isActive));
       });
-      sliderDots.forEach((dot, i) => {
+      dotEls.forEach((dot, i) => {
         const isActive = i === currentIndex;
         dot.classList.toggle("active", isActive);
         dot.setAttribute("aria-selected", String(isActive));
@@ -146,7 +282,7 @@
     };
 
     const goToSlide = (index) => {
-      currentIndex = (index + slides.length) % slides.length; // infinite loop
+      currentIndex = (index + slideEls.length) % slideEls.length; // infinite loop
       render();
     };
 
@@ -155,7 +291,9 @@
 
     const startAutoplay = () => {
       stopAutoplay();
-      autoplayId = setInterval(nextSlide, AUTOPLAY_DELAY);
+      if (slideEls.length > 1) {
+        autoplayId = setInterval(nextSlide, AUTOPLAY_DELAY);
+      }
     };
 
     const stopAutoplay = () => {
@@ -234,19 +372,14 @@
   };
 
   /* =====================================================================
-     4. SEARCH — LIVE SUGGESTIONS
+     4. SEARCH — QUERIES THE LOADED SUPABASE APP DATA
      ===================================================================== */
 
-  // Placeholder searchable dataset. Will be replaced by loadApps() results.
-  const SEARCHABLE_APPS = [
-    { id: "app-1", name: "Placeholder App One", developer: "Developer Name", category: "Tools", version: "1.0.0" },
-    { id: "app-2", name: "Placeholder App Two", developer: "Developer Name", category: "Social", version: "2.3.1" },
-    { id: "app-3", name: "Placeholder App Three", developer: "Developer Name", category: "Games", version: "4.1.0" },
-    { id: "app-4", name: "Placeholder App Four", developer: "Developer Name", category: "AI", version: "1.2.0" },
-    { id: "app-5", name: "Placeholder App Five", developer: "Developer Name", category: "Utilities", version: "3.0.2" },
-    { id: "app-6", name: "Placeholder App Six", developer: "Developer Name", category: "Video", version: "5.5.5" },
-    { id: "app-7", name: "Placeholder App Seven", developer: "Developer Name", category: "Music", version: "1.1.1" },
-  ];
+  // Populated once at startup from Supabase (see section 14). Search runs
+  // against this in-memory list, so results are instant with no per-
+  // keystroke network round trip, while the data itself is 100% Supabase.
+  let allLoadedApps = [];
+  const appsById = new Map();
 
   const MAX_SUGGESTIONS = 6;
 
@@ -260,17 +393,25 @@
       return;
     }
 
-    searchSuggestions.innerHTML = matches
-      .slice(0, MAX_SUGGESTIONS)
-      .map(
-        (app) => `
-          <button type="button" class="suggestion-item" role="option" data-app-id="${app.id}">
-            <span class="suggestion-name">${app.name}</span>
-            <span class="suggestion-meta">${app.developer} · ${app.category}</span>
-          </button>
-        `
-      )
-      .join("");
+    searchSuggestions.innerHTML = "";
+    matches.slice(0, MAX_SUGGESTIONS).forEach((app) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "suggestion-item";
+      btn.setAttribute("role", "option");
+      btn.dataset.appId = String(app.id);
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "suggestion-name";
+      nameEl.textContent = app.name || "Untitled app";
+
+      const metaEl = document.createElement("span");
+      metaEl.className = "suggestion-meta";
+      metaEl.textContent = [app.developer, app.category].filter(Boolean).join(" · ");
+
+      btn.append(nameEl, metaEl);
+      searchSuggestions.appendChild(btn);
+    });
 
     searchSuggestions.hidden = false;
     searchInput.setAttribute("aria-expanded", "true");
@@ -283,8 +424,9 @@
       return;
     }
 
-    const matches = SEARCHABLE_APPS.filter((app) =>
+    const matches = allLoadedApps.filter((app) =>
       [app.name, app.developer, app.category, app.version]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(trimmed)
@@ -294,7 +436,7 @@
   };
 
   const initSearch = () => {
-    if (!searchInput || !searchSuggestions) return;
+    if (!searchInput || !searchSuggestions || !searchForm) return;
 
     const debouncedSearch = debounce((value) => runSearch(value), 300);
 
@@ -307,8 +449,7 @@
       const item = e.target.closest(".suggestion-item");
       if (!item) return;
       const appId = item.dataset.appId;
-      // Placeholder navigation — will route to a real app detail page.
-      window.location.href = `app-details.html?id=${encodeURIComponent(appId)}`;
+      window.location.href = `app.html?id=${encodeURIComponent(appId)}`;
     });
 
     // Hide suggestions when clicking outside the search form
@@ -336,10 +477,7 @@
   /* =====================================================================
      5. CATEGORIES — FILTER + ACTIVE STATE
      ===================================================================== */
-
-  /** Placeholder filter logic — will eventually re-query Supabase data. */
   const filterApps = (category) => {
-    // Currently a no-op over placeholder markup; scrolls user to results.
     scrollToId("featuredApps");
     showToast(`Showing "${category}" apps`);
   };
@@ -363,17 +501,154 @@
   };
 
   /* =====================================================================
-     6. APP CARDS — INSTALL BUTTON (EVENT DELEGATION)
+     6. APP CARDS — DYNAMIC RENDERING + INSTALL / NAVIGATION
      ===================================================================== */
-  const initAppCardActions = () => {
-    document.addEventListener("click", (e) => {
-      const installBtn = e.target.closest(".btn-install, .btn-install-small");
-      if (!installBtn) return;
 
-      // NOTE: Future integration point — will trigger a Supabase-backed
-      // download/install flow. For now this is a visual placeholder only.
-      showToast("Preparing download...");
+  /**
+   * Builds a single .app-card element (optionally ranked, for Top Charts)
+   * from a Supabase `apps` row. Uses DOM APIs (not innerHTML) so app
+   * content can never be interpreted as markup.
+   * @param {Object} app
+   * @param {{ranked?: boolean, rank?: number|null}} [opts]
+   * @returns {HTMLElement}
+   */
+  const buildAppCard = (app, { ranked = false, rank = null } = {}) => {
+    appsById.set(String(app.id), app);
+
+    const card = document.createElement("article");
+    card.className = ranked ? "app-card app-card-ranked" : "app-card";
+    card.dataset.appId = String(app.id);
+
+    if (ranked) {
+      const badge = document.createElement("span");
+      badge.className = "rank-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = String(rank);
+      card.appendChild(badge);
+    }
+
+    const icon = document.createElement("img");
+    icon.className = "app-icon";
+    icon.width = 64;
+    icon.height = 64;
+    icon.loading = "lazy";
+    icon.alt = `${app.name || "App"} icon`;
+    setIconWithFallback(icon, app.icon_url);
+    card.appendChild(icon);
+
+    const info = document.createElement("div");
+    info.className = "app-info";
+
+    const name = document.createElement("h3");
+    name.className = "app-name";
+    name.textContent = app.name || "Untitled app";
+
+    const dev = document.createElement("p");
+    dev.className = "app-developer";
+    dev.textContent = app.developer || "Unknown developer";
+
+    const meta = document.createElement("div");
+    meta.className = "app-meta";
+
+    const ratingEl = document.createElement("span");
+    ratingEl.className = "app-rating";
+    const ratingVal = Number(app.rating);
+    if (ratingVal > 0) {
+      ratingEl.setAttribute("aria-label", `Rated ${ratingVal.toFixed(1)} out of 5 stars`);
+      ratingEl.textContent = `★ ${ratingVal.toFixed(1)}`;
+    } else {
+      ratingEl.setAttribute("aria-label", "Not yet rated");
+      ratingEl.textContent = "New";
+    }
+
+    const downloadsEl = document.createElement("span");
+    downloadsEl.className = "app-downloads";
+    downloadsEl.textContent = `${formatDownloads(app.downloads)} downloads`;
+
+    const sizeEl = document.createElement("span");
+    sizeEl.className = "app-size";
+    sizeEl.textContent = app.size || "—";
+
+    meta.append(ratingEl, downloadsEl, sizeEl);
+    info.append(name, dev, meta);
+    card.appendChild(info);
+
+    const installBtn = document.createElement("button");
+    installBtn.type = "button";
+    installBtn.className = "btn btn-install-small";
+    installBtn.setAttribute("aria-label", `Install ${app.name || "app"}`);
+    installBtn.dataset.appId = String(app.id);
+    installBtn.textContent = "Install";
+    card.appendChild(installBtn);
+
+    return card;
+  };
+
+  /**
+   * Clears a grid container and repopulates it from real app rows.
+   * Shows a plain empty message (no styling assumptions) when there's
+   * nothing to display, rather than leaving stale placeholder markup.
+   * @param {HTMLElement|null} container
+   * @param {Array|null} apps
+   * @param {{ranked?: boolean}} [opts]
+   */
+  const renderAppGrid = (container, apps, { ranked = false } = {}) => {
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!apps || !apps.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "No apps to show here yet — check back soon.";
+      container.appendChild(empty);
+      return;
+    }
+
+    apps.forEach((app, i) => {
+      container.appendChild(buildAppCard(app, { ranked, rank: ranked ? i + 1 : null }));
     });
+  };
+
+  // Set by the data layer once database.js has been loaded.
+  let incrementDownloadFn = null;
+
+  const handleInstallClick = (app) => {
+    if (!app) {
+      showToast("This app isn't available right now.");
+      return;
+    }
+    if (!app.apk_url) {
+      showToast(`${app.name || "This app"} isn't ready for download yet.`);
+      return;
+    }
+
+    showToast(`Preparing ${app.name || "download"}…`);
+    window.location.href = app.apk_url;
+
+    // Best-effort analytics — never blocks or breaks the download itself.
+    if (typeof incrementDownloadFn === "function") {
+      incrementDownloadFn(app.id).catch(() => {});
+    }
+  };
+
+  /**
+   * Single delegated handler covering install buttons and card/slide
+   * navigation across the hero slider, every app grid, and search
+   * suggestions-adjacent markup.
+   */
+  const handleAppInteractions = (e) => {
+    const installBtn = e.target.closest(".btn-install, .btn-install-small");
+    if (installBtn) {
+      e.preventDefault();
+      const appId = installBtn.dataset.appId;
+      const app = appId ? appsById.get(appId) : null;
+      handleInstallClick(app);
+      return;
+    }
+
+    const card = e.target.closest(".app-card, .slide");
+    if (card && card.dataset.appId) {
+      window.location.href = `app.html?id=${encodeURIComponent(card.dataset.appId)}`;
+    }
   };
 
   /* =====================================================================
@@ -483,7 +758,7 @@
   };
 
   /* =====================================================================
-     11. LAZY LOADING IMAGES
+     11. LAZY LOADING IMAGES (fade-in enhancement)
      ===================================================================== */
   const initLazyImages = () => {
     const images = Array.from(document.querySelectorAll("img[loading='lazy']"));
@@ -550,54 +825,84 @@
   };
 
   /* =====================================================================
-     14. FUTURE-READY DATA LAYER (SUPABASE PLACEHOLDER)
+     14. DATA LAYER — SUPABASE (via js/database.js → js/supabase.js)
      ===================================================================== */
 
   /**
-   * Placeholder app dataset — will be replaced by a Supabase query.
-   * No credentials or network calls are included here.
+   * Loads every homepage data set from Supabase and renders it into the
+   * existing static containers. `database.js` is reached via a dynamic
+   * import() so this file can stay a classic <script> (index.html isn't
+   * being modified to add type="module") while still using the project's
+   * one shared Supabase client under the hood.
    */
-  const PLACEHOLDER_APPS = SEARCHABLE_APPS;
+  const initHomeData = async () => {
+    let db;
+    try {
+      db = await import("./js/database.js");
+    } catch (err) {
+      console.error("PaliaAPK HUB: failed to load the database module.", err);
+      showToast("Couldn't connect to the app catalog. Please refresh.");
+      if (heroSlider) heroSlider.hidden = true;
+      renderAppGrid(featuredAppsEl, []);
+      renderAppGrid(trendingAppsEl, []);
+      renderAppGrid(newAppsEl, []);
+      renderAppGrid(topChartsEl, [], { ranked: true });
+      renderAppGrid(recommendedAppsEl, []);
+      return;
+    }
 
-  /**
-   * Placeholder category dataset — will be replaced by a Supabase query.
-   */
-  const PLACEHOLDER_CATEGORIES = [
-    "AI", "Social", "Games", "Tools", "Utilities",
-    "Video", "Music", "Education", "Business", "Photography",
-  ];
+    incrementDownloadFn = db.incrementDownload;
 
-  /**
-   * Future: fetch app records from Supabase.
-   * Currently resolves with a static placeholder array.
-   * @returns {Promise<Array>}
-   */
-  const loadApps = async () => {
-    // TODO: replace with Supabase client query, e.g.
-    // const { data, error } = await supabase.from("apps").select("*");
-    return Promise.resolve(PLACEHOLDER_APPS);
-  };
+    const [featuredRes, trendingRes, newRes, topRes, generalRes] = await Promise.all([
+      db.loadFeaturedApps(10),
+      db.loadTrendingApps(10),
+      db.loadNewApps(10),
+      db.loadTopCharts(10),
+      db.loadApps({ page: 1, pageSize: 100 }),
+    ]);
 
-  /**
-   * Future: render a list of app records into a target grid.
-   * Currently a no-op stub — markup is static placeholder HTML for now.
-   * @param {Array} apps
-   * @param {HTMLElement} container
-   */
-  const renderApps = (apps, container) => {
-    if (!container || !Array.isArray(apps)) return;
-    // TODO: build and inject .app-card markup dynamically from `apps`.
-  };
+    const errors = [featuredRes, trendingRes, newRes, topRes, generalRes]
+      .map((r) => r.error)
+      .filter(Boolean);
+    if (errors.length) {
+      console.error("PaliaAPK HUB: one or more catalog queries failed.", errors);
+      showToast("Some content couldn't be loaded. Showing what's available.");
+    }
 
-  /**
-   * Future: fetch category records from Supabase.
-   * Currently resolves with a static placeholder array.
-   * @returns {Promise<Array>}
-   */
-  const loadCategories = async () => {
-    // TODO: replace with Supabase client query, e.g.
-    // const { data, error } = await supabase.from("categories").select("*");
-    return Promise.resolve(PLACEHOLDER_CATEGORIES);
+    const featured = featuredRes.data || [];
+    const trending = trendingRes.data || [];
+    const fresh = newRes.data || [];
+    const top = topRes.data || [];
+    const general = generalRes.data || [];
+
+    // Build the search index / id lookup from everything fetched.
+    const merged = new Map();
+    [...general, ...featured, ...trending, ...fresh, ...top].forEach((app) => {
+      if (app && app.id != null) merged.set(String(app.id), app);
+    });
+    allLoadedApps = Array.from(merged.values());
+    allLoadedApps.forEach((app) => appsById.set(String(app.id), app));
+
+    // Hero slider — featured apps with a banner image only.
+    const { slides: heroSlideEls, dots: heroDotEls } = renderHeroSlider(featured);
+    initHeroSliderEngine(heroSlideEls, heroDotEls);
+
+    // Section grids.
+    renderAppGrid(featuredAppsEl, featured);
+    renderAppGrid(trendingAppsEl, trending);
+    renderAppGrid(newAppsEl, fresh);
+    renderAppGrid(topChartsEl, top, { ranked: true });
+
+    // Recommended — general catalog apps not already shown above. The
+    // schema has no dedicated "recommended" flag, so this section surfaces
+    // the rest of the catalog rather than repeating apps already listed.
+    const alreadyShown = new Set(
+      [...featured, ...trending, ...fresh, ...top].map((a) => String(a.id))
+    );
+    const recommended = general.filter((a) => !alreadyShown.has(String(a.id))).slice(0, 8);
+    renderAppGrid(recommendedAppsEl, recommended);
+
+    initLazyImages();
   };
 
   /* =====================================================================
@@ -605,21 +910,17 @@
      ===================================================================== */
   const init = () => {
     initLoadingOverlay();
-    initHeroSlider();
     initSearch();
     initCategories();
-    initAppCardActions();
+    document.addEventListener("click", handleAppInteractions);
     initViewAllButtons();
     initHeaderActions();
     initBottomNav();
     initAdminTrigger();
-    initLazyImages();
     initScrollSync();
     initFooterYear();
 
-    // Data layer is ready but inert until a real backend is connected.
-    loadApps();
-    loadCategories();
+    initHomeData();
   };
 
   document.addEventListener("DOMContentLoaded", init);
